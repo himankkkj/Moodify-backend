@@ -5,7 +5,7 @@ const otpSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Email is required'],
     },
-    user:{
+    user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: [true, 'User is required'],
@@ -14,12 +14,20 @@ const otpSchema = new mongoose.Schema({
         type: String,
         required: [true, 'OTP hash is required'],
     },
-    createdAt: {
-        type: Date,
-        default: Date.now,
-        expires: 300, // OTP expires after 5 minutes
+    attempts: {
+        type: Number,
+        default: 0,
     },
-});
+    expiresAt: {
+        type: Date,
+        required: true,
+        default: () => new Date(Date.now() + 5 * 60 * 1000), // 5 minutes expiry
+    },
+}, { timestamps: true });
+
+otpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+otpSchema.index({ email: 1 });
+otpSchema.index({ user: 1 });
 
 const otpModel = mongoose.model('OTP', otpSchema);
 export default otpModel;
