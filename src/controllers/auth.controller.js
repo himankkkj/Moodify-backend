@@ -16,6 +16,13 @@ const COOKIE_OPTIONS = {
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 };
 
+const CLEAR_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  path: "/api/auth",
+};
+
 export async function registerUser(req, res) {
   const { username, email, password } = req.body;
 
@@ -192,7 +199,7 @@ export async function refreshToken(req, res) {
   if (!session) {
     // Reuse detected or invalid session — revoke all sessions of this user
     await sessionModel.updateMany({ user: decoded.id }, { $set: { revoke: true } });
-    res.clearCookie("refreshToken", { path: "/api/auth" });
+    res.clearCookie("refreshToken", CLEAR_COOKIE_OPTIONS);
     return res.status(401).json({
       message: "Token reuse detected or session revoked",
     });
@@ -246,7 +253,7 @@ export async function logout(req, res) {
     }
   }
 
-  res.clearCookie("refreshToken", { path: "/api/auth" });
+  res.clearCookie("refreshToken", CLEAR_COOKIE_OPTIONS);
 
   res.status(200).json({
     message: "User logged out successfully",
@@ -276,7 +283,7 @@ export async function logoutAllSessions(req, res) {
     { $set: { revoke: true } }
   );
 
-  res.clearCookie("refreshToken", { path: "/api/auth" });
+  res.clearCookie("refreshToken", CLEAR_COOKIE_OPTIONS);
 
   res.status(200).json({
     message: "User logged out from all sessions successfully",
