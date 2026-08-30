@@ -7,6 +7,7 @@ import crypto from "crypto";
 import { sendEmail } from "../service/email.service.js";
 import otpModel from "../models/otp.model.js";
 import { generateOtp, getOtpHtml } from "../utils/utils.js";
+import { validateStrongPassword } from "../utils/password.js";
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -34,8 +35,9 @@ export async function registerUser(req, res) {
   if (!email || !emailRegex.test(email)) {
     return res.status(400).json({ message: "Invalid email address format" });
   }
-  if (!password || password.length < 8 || password.length > 128) {
-    return res.status(400).json({ message: "Password must be between 8 and 128 characters" });
+  const passwordError = validateStrongPassword(password);
+  if (passwordError) {
+    return res.status(400).json({ message: passwordError });
   }
 
   const isUsernameExists = await userModel.findOne({ username: username.trim() });
