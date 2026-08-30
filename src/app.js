@@ -17,14 +17,27 @@ const ALLOWED_ORIGINS = [
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  if (origin && (ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.pages.dev') || origin.endsWith('.onrender.com'))) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  } else if (origin) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
+  
+  // 1. Tell Cloudflare and Browsers not to cache CORS headers across different origins
+  res.setHeader('Vary', 'Origin');
+
+  // 2. Strict Origin Validation matching your allowed domains
+  if (origin) {
+    const isAllowed = 
+      ALLOWED_ORIGINS.includes(origin) || 
+      origin.endsWith('.pages.dev') || 
+      origin.endsWith('.onrender.com') ||
+      // Add your custom production domain here if you use one on Cloudflare
+      origin.includes('moodify'); 
+
+    if (isAllowed) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+    }
   }
+
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Set-Cookie');
 
   if (req.method === 'OPTIONS') {
     return res.sendStatus(204);

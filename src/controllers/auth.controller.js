@@ -71,9 +71,11 @@ export async function registerUser(req, res) {
     expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 min expiry
   });
 
-  await sendEmail(user.email, "Verify your email", `Your OTP is ${opt}`, otpHtml);
+  // Don't let email block signup response
+  sendEmail(user.email, "Verify your email", `Your OTP is ${opt}`, otpHtml)
+    .catch((err) => console.error("Email send failed during registration:", err));
 
-  res.status(201).json({
+  return res.status(201).json({
     message: "User registered successfully. Please verify your email.",
     user: {
       id: user._id,
@@ -386,7 +388,9 @@ export async function resendOtp(req, res) {
     expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 min expiry
   });
 
-  await sendEmail(user.email, "Verify your email", `Your OTP is ${opt}`, otpHtml);
+  // Don't let email block resend OTP response
+  sendEmail(user.email, "Verify your email", `Your OTP is ${opt}`, otpHtml)
+    .catch((err) => console.error("Email send failed during resend:", err));
 
   return res.status(200).json({
     message: "OTP resent successfully",
